@@ -11,7 +11,7 @@ class ErikaCodec(codecs.Codec):
         self._encoding_map: dict[str, bytes] = {
             k: base64.b64decode(v)
             for k, v
-            in char_data[language]['charset'].items()
+            in char_data[language].items()
         }
         self._decoding_map: dict[bytes, str] = {
             v: k

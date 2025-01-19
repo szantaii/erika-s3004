@@ -1,6 +1,6 @@
 from __future__ import annotations
 from .codec import ErikaCodec
-from .movement import ErikaMovement, get_movement_values
+from .control import ErikaControl, get_control_values
 import codecs
 import serial
 import struct
@@ -16,11 +16,7 @@ class Erika:
     MAX_MICRO_STEP_COUNT = 127
 
     def __init__(self, device: str, language: str = 'hu-HU') -> None:
-        self._connection: serial.Serial = serial.serial_for_url(device, do_not_open=True)
-        self._connection.baudrate = self.__class__.BAUD_RATE
-        self._connection.rtscts = True
-
-        self._movement: ErikaMovement = get_movement_values(language)
+        self._control: ErikaControl = get_control_values()
 
         self._codec: ErikaCodec = ErikaCodec(language)
         self._encoding_name: str = '{}{}'.format(
@@ -33,6 +29,10 @@ class Erika:
             name=self._encoding_name
         )
         self._toggle_codec_registration()
+
+        self._connection: serial.Serial = serial.serial_for_url(device, do_not_open=True)
+        self._connection.baudrate = self.__class__.BAUD_RATE
+        self._connection.rtscts = True
 
     def __del__(self) -> None:
         if self._connection.is_open:
@@ -83,15 +83,20 @@ class Erika:
         self._connection.write(data)
 
         # Workaround because hardware flow control does not work
-        if (self._movement.MICRO_STEP_LEFT_RIGHT in data
-                or '\r'.encode(self._encoding_name) in data
-                or '\n'.encode(self._encoding_name) in data):
-            time.sleep(3)
-        elif (self._movement.MICRO_STEP_DOWN in data
-                or self._movement.MICRO_STEP_UP in data):
-            time.sleep(0.5)
-        else:
-            time.sleep(0.25)
+        # sleep_timeout = 0.25  # seconds
+        # if (self._control.MICRO_STEP_LEFT_RIGHT in data
+        #         or '\r'.encode(self._encoding_name) in data
+        #         or '\n'.encode(self._encoding_name) in data):
+        #     sleep_timeout *= 20
+        # elif (self._control.MICRO_STEP_DOWN in data
+        #         or self._control.MICRO_STEP_UP in data
+        #         or '\t'.encode(self._encoding_name) in data):
+        #     sleep_timeout *= 2
+        # time.sleep(sleep_timeout)
+
+        # Workaround because hardware flow control still does not work
+        # properly for some reason :(
+        self._connection.write(self._control.PRINTER_READY * 2)
 
     def read_string(self, size: int = 1) -> str:
         return self.read_bytes(size=size).decode(self._encoding_name)
@@ -130,26 +135,26 @@ class Erika:
 
     def _micro_step_horizontally(self, micro_step_count: int) -> None:
         self.write_bytes(
-            self._movement.MICRO_STEP_LEFT_RIGHT + struct.pack('b', micro_step_count)
+            self._control.MICRO_STEP_LEFT_RIGHT + struct.pack('b', micro_step_count)
         )
 
-    def step_up(self, step_count: int = 1) -> None:
-        self._step(self._movement.STEP_UP, step_count)
+    def half_step_up(self, half_step_count: int = 1) -> None:
+        self._step(self._control.HALF_STEP_UP, half_step_count)
 
-    def step_down(self, step_count: int = 1) -> None:
-        self._step(self._movement.STEP_DOWN, step_count)
+    def half_step_down(self, half_step_count: int = 1) -> None:
+        self._step(self._control.HALF_STEP_DOWN, half_step_count)
 
-    def step_left(self, step_count: int = 1) -> None:
-        self._step(self._movement.STEP_LEFT, step_count)
+    def half_step_left(self, half_step_count: int = 1) -> None:
+        self._step(self._control.HALF_STEP_LEFT, half_step_count)
 
-    def step_right(self, step_count: int = 1) -> None:
-        self._step(self._movement.STEP_RIGHT, step_count)
+    def half_step_right(self, half_step_count: int = 1) -> None:
+        self._step(self._control.HALF_STEP_RIGHT, half_step_count)
 
     def micro_step_up(self, micro_step_count: int = 1) -> None:
-        self._step(self._movement.MICRO_STEP_UP, micro_step_count)
+        self._step(self._control.MICRO_STEP_UP, micro_step_count)
 
     def micro_step_down(self, micro_step_count: int = 1) -> None:
-        self._step(self._movement.MICRO_STEP_DOWN, micro_step_count)
+        self._step(self._control.MICRO_STEP_DOWN, micro_step_count)
 
     def micro_step_left(self, micro_step_count: int = 1) -> None:
         for micro_steps in self._divide_micro_steps(micro_step_count):
@@ -158,11 +163,3 @@ class Erika:
     def micro_step_right(self, micro_step_count: int = 1) -> None:
         for micro_steps in self._divide_micro_steps(micro_step_count):
             self._micro_step_horizontally(micro_steps)
-
-# typewriter = Erika('/dev/ttyUSB0')
-# typewriter.connect()
-# typewriter.write_string("Hello\n_  World!\n\n\n")
-# typewriter.disconnect()
-#
-# with Erika('/dev/ttyUSB0') as tw:
-#     tw.write_string('fck')
