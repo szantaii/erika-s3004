@@ -14,6 +14,7 @@ class ErikaControl:
     MICRO_STEP_DOWN: bytes
     MICRO_STEP_LEFT_RIGHT: bytes
     PRINTER_READY: bytes
+    NO_CGE_ADVANCE: bytes
 
 
 def get_control_values() -> ErikaControl:

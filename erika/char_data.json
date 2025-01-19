@@ -7,7 +7,8 @@
         "MICRO_STEP_UP": "gg==",
         "MICRO_STEP_DOWN": "gQ==",
         "MICRO_STEP_LEFT_RIGHT": "pQ==",
-        "PRINTER_READY": "lg=="
+        "PRINTER_READY": "lg==",
+        "NO_CGE_ADVANCE": "qQ=="
     },
     "hu-HU": {
         "\u0008": "cg==",
