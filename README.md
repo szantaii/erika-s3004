@@ -2,6 +2,23 @@
 
 ## Contents
 
+* [About](#about)
+* [License](#license)
+* [Hardware setup](#hardware-setup)
+  * [Erika connector](#erika-connector)
+* [Software](#software)
+* [Resources](#resources)
+
+## About
+
+__TODO__
+
+## License
+
+__TODO__
+
+## Hardware setup
+
 __TODO__
 
 ### Erika connector
@@ -53,6 +70,12 @@ Is this necessary?
 | `RTS`                  | `B11` (`DTD`)                  |
 | `+5V`                  | `B12` (`+5V`)                  |
 | `RX`                   | `B13` (`TX`)                   |
+
+## Software
+
+__TODO__
+
+## Character encoding and typewriter control
 
 | Character | Erika encoded character [byte] | Description                                       |
 | --------- | ------------------------------ | ------------------------------------------------- |
@@ -160,6 +183,29 @@ Is this necessary?
 | `\u00FC`  | `0x12`                         | Latin small letter u with diaeresis (U+00FC)      |
 | `\u0171`  | `0x14`                         | Latin small letter u with double acute (U+0171)   |
 
+> 96H Drucker Fertigmeldung
+>
+> A0H Dauerfunktion für alle Tasten\
+> A1H Übertragungsrate 10-1200 bd\
+> 08-2400 bd\
+> 04-4800 bd\
+> 02-9600 bd\
+> 01-19200 bd
+>
+> A3H Anschlagstärke (nächstes Zeichen ist Stärke)\
+> A4H\
+> A5H Tabulator (nächstes Zeichen is Schritt)\
+> A6H Zeilenschaltung (nächstes Zeichen ist Schritt)\
+> A7H Typenrad drehen (nächstes Zeichen ist Schritt)\
+> A8H Farbbandtransport (nächstes Zeichen ist Schritt)\
+> A9H kein Zeilenvorschub (Doppeldruck)\
+> AAH BEL Bell (Signal nächstes Zeichen ist Signallänge)(07H;\
+> ABH Tastaturabfrage\
+> ACH Tastaturabfrage 2 (mit 00 Byte von Tastatur)\
+> ADH entspr. der grünen REL-Funktion\
+> AEH letztes Zeichen löschen\
+> AFH Relocated
+
 ## Image drawing
 
 6 &ldquo;color&rdquo; grayscale image conversion:
@@ -185,3 +231,7 @@ magick                    \
     -remap pattern:gray50 \
     pgm:-
 ```
+
+## Resources
+
+__TODO__
