@@ -21,6 +21,6 @@ def get_control_values() -> ErikaControl:
     with open(Path(__file__).parent.joinpath('char_data.json')) as char_data_file:
         raw_control_data = json.load(char_data_file)['control']
 
-    control_map = { k: base64.b64decode(v) for k, v in raw_control_data.items() }
+    control_map = {k: base64.b64decode(v) for k, v in raw_control_data.items()}
 
     return ErikaControl(**control_map)

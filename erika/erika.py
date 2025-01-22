@@ -1,11 +1,10 @@
-from __future__ import annotations
 from .codec import ErikaCodec
 from .control import ErikaControl, get_control_values
 import codecs
 import serial
 import struct
 import time
-from typing import Any, Optional
+from typing import Any, Optional, Self
 
 
 class Erika:
@@ -68,7 +67,7 @@ class Erika:
         time.sleep(self.__class__.CONNECTION_CLOSE_TIMEOUT)
         self._connection.close()
 
-    def __enter__(self) -> Erika:
+    def __enter__(self) -> Self:
         self.connect()
 
         return self

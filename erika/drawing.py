@@ -1,4 +1,3 @@
-from __future__ import annotations
 from .erika import Erika
 import numpy
 import cv2
@@ -9,7 +8,7 @@ import subprocess
 class ErikaDrawing(Erika):
     MAX_WIDTH = 128
     MICRO_STEP_PER_DOT = 3
-    GRAY_PALETTE= (0, 85, 170, 255)
+    GRAY_PALETTE = (0, 85, 170, 255)
     GRAY_PALETTE_IMAGE_TEMPLATE = (
         'P2\n'
         '{image_width} 1\n'
@@ -63,9 +62,9 @@ class ErikaDrawing(Erika):
         image_data = self._get_image_data_from_file(image_path)
 
         for line in image_data:
-            continous_white_pixels = 0
+            continuous_white_pixels = 0
 
-            if set(line) == set({max(self.__class__.GRAY_PALETTE)}):
+            if set(line) == {max(self.__class__.GRAY_PALETTE)}:
                 self._move_to_new_line()
 
                 continue
@@ -76,10 +75,10 @@ class ErikaDrawing(Erika):
 
                 if pixel_value != max(self.__class__.GRAY_PALETTE):
                     self.micro_step_right(
-                        micro_step_count=continous_white_pixels * 2 * self.__class__.MICRO_STEP_PER_DOT
+                        micro_step_count=continuous_white_pixels * 2 * self.__class__.MICRO_STEP_PER_DOT
                     )
 
-                    continous_white_pixels = 0
+                    continuous_white_pixels = 0
 
                 if pixel_value == 0:
                     self.write_bytes(dot)
@@ -129,6 +128,6 @@ class ErikaDrawing(Erika):
                         micro_step_count=2 * self.__class__.MICRO_STEP_PER_DOT - horizontal_padding
                     )
                 else:
-                    continous_white_pixels += 1
+                    continuous_white_pixels += 1
 
             self._move_to_new_line()
