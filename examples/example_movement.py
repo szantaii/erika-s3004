@@ -22,7 +22,7 @@ from erika.erika import Erika
 #         tw.micro_step_right(i)
 #         tw.write_string('.\b')
 
-with Erika('/dev/ttyACM0') as tw:
+with Erika('/dev/ttyUSB0') as tw:
     tw.write_string('\n')
 
     for i in range(0, 21, 1):
