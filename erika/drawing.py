@@ -1,6 +1,4 @@
 from .erika import Erika
-import numpy
-import cv2
 import random
 import subprocess
 
@@ -17,7 +15,7 @@ class ErikaDrawing(Erika):
     )
 
     @classmethod
-    def _get_image_data_from_file(cls, image_path: str) -> numpy.ndarray:
+    def _get_image_data_from_file(cls, image_path: str) -> list[list[int]]:
         imagemagick_command = [
             'magick',
             image_path,
@@ -48,10 +46,59 @@ class ErikaDrawing(Erika):
         if magick_process.returncode != 0:
             raise RuntimeError('{!r}'.format(stderr))
 
-        return cv2.imdecode(
-            numpy.asarray(bytearray(pgm_image), dtype=numpy.uint8),
-            cv2.IMREAD_GRAYSCALE
+        # Process PGM image
+        #
+        # This is how a 3x3 PGM image looks like:
+        #
+        #   b'P5\n3 3\n255\n\xff\xff\x00\xff\x00\xff\x00\xff\xff'
+        #
+        # In general:
+        #
+        #   1. A "magic number" for identifying the file type.
+        #      A pgm image's magic number is the two characters "P5".
+        #   2. Whitespace (blanks, TABs, CRs, LFs).
+        #   3. A width, formatted as ASCII characters in decimal.
+        #   4. Whitespace.
+        #   5. A height, again in ASCII decimal.
+        #   6. Whitespace.
+        #   7. The maximum gray value, again in ASCII decimal.
+        #   8. A single whitespace character (usually a newline).
+        #   9. A raster of height rows, in order from top to bottom.
+        #      Each row consists of width gray values, in order from
+        #      left to right. Each gray value is a number from 0 through
+        #      maximum gray value, with 0 being black and maximum gray
+        #      value being white.
+
+        # Get image header size
+        newline_count = 0
+        image_header_size = 0
+
+        for _ in range(len(pgm_image)):
+            if pgm_image[image_header_size: image_header_size + 1] == b'\n':
+                newline_count += 1
+
+            image_header_size += 1
+
+            if newline_count == 3:
+                break
+
+        # Get image width and height
+        image_width, image_height = map(
+            int,
+            pgm_image[0: image_header_size].decode().split('\n', maxsplit=2)[1].split(' ', maxsplit=1)
         )
+
+        # Get image data
+        image_data = []
+
+        for i in range(image_height):
+            image_data.append(
+                list(
+                    pgm_image[image_header_size + i * image_width: image_header_size + i * image_width + image_width]
+                )
+            )
+
+        return image_data
 
     def _move_to_new_line(self) -> None:
         self.write_string('\r')
