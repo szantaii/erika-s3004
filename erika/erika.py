@@ -81,30 +81,32 @@ class Erika:
     def write_bytes(self, data: bytes) -> None:
         self._connection.write(data)
 
-        # Workaround because hardware flow control does not work
-        # sleep_timeout = 0.25  # seconds
-        # if (self._control.MICRO_STEP_LEFT_RIGHT in data
-        #         or '\r'.encode(self._encoding_name) in data
-        #         or '\n'.encode(self._encoding_name) in data):
-        #     sleep_timeout *= 20
-        # elif (self._control.MICRO_STEP_DOWN in data
-        #         or self._control.MICRO_STEP_UP in data
-        #         or '\t'.encode(self._encoding_name) in data):
-        #     sleep_timeout *= 2
-        # time.sleep(sleep_timeout)
-
         # Workaround because hardware flow control still does not work
         # properly for some reason :(
         self._connection.write(self._control.PRINTER_READY * 2)
 
     def read_string(self, size: int = 1) -> str:
-        return self.read_bytes(size=size).decode(self._encoding_name)
+        return self.read_bytes(size=size).decode(encoding=self._encoding_name)
 
     def write_string(self, string: str) -> None:
-        data = string.encode(self._encoding_name)
+        data = string.encode(encoding=self._encoding_name)
 
         for i in range(len(data)):
             self.write_bytes(data[i: i + 1])
+
+    def write_char(self, char: str, carriage_advance: bool = True) -> None:
+        if (not isinstance(char, str)
+                or len(char) != 1):
+            raise RuntimeError
+
+        if not carriage_advance:
+            self.write_bytes(
+                self._control.NO_CGE_ADVANCE + char.encode(encoding=self._encoding_name)
+            )
+
+            return
+
+        self.write_string(char)
 
     def _step(self, direction: bytes, step_count: int) -> None:
         if step_count < 1:
