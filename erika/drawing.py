@@ -104,8 +104,7 @@ class ErikaDrawing(Erika):
         self.write_string('\r')
         self.micro_step_down(micro_step_count=2 * self.__class__.MICRO_STEP_PER_DOT)
 
-    def print_image(self, image_path: str) -> None:
-        dot = self._control.NO_CGE_ADVANCE + '.'.encode(self._encoding_name)
+    def draw_image(self, image_path: str) -> None:
         image_data = self._get_image_data_from_file(image_path)
 
         for line in image_data:
@@ -116,9 +115,9 @@ class ErikaDrawing(Erika):
 
                 continue
 
-            for pixel_value in line:
-                if pixel_value not in self.__class__.GRAY_PALETTE:
-                    raise RuntimeError()
+            for i, pixel_value in enumerate(line):
+                if set(line[i:]) == {max(self.__class__.GRAY_PALETTE)}:
+                    break
 
                 if pixel_value != max(self.__class__.GRAY_PALETTE):
                     self.micro_step_right(
@@ -128,34 +127,34 @@ class ErikaDrawing(Erika):
                     continuous_white_pixels = 0
 
                 if pixel_value == 0:
-                    self.write_bytes(dot)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_bytes(dot)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_bytes(dot)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_bytes(dot)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
                 elif pixel_value == 85:
                     if random.choice([True, False]):
-                        self.write_bytes(dot)
+                        self.write_char('.', carriage_advance=False)
                         self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
                         self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                        self.write_bytes(dot)
+                        self.write_char('.', carriage_advance=False)
                         self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
                         self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
 
                         continue
 
                     self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
                     self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
                 elif pixel_value == 170:
                     half_micro_steps = self.__class__.MICRO_STEP_PER_DOT // 2
@@ -167,7 +166,7 @@ class ErikaDrawing(Erika):
                     )
                     self.micro_step_down(micro_step_count=vertical_padding)
                     self.micro_step_right(micro_step_count=horizontal_padding)
-                    self.write_bytes(dot)
+                    self.write_char('.', carriage_advance=False)
                     self.micro_step_up(
                         micro_step_count=self.__class__.MICRO_STEP_PER_DOT - vertical_padding
                     )
