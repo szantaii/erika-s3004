@@ -1,20 +1,28 @@
-from erika.automaton import ErikaAutomaton
-import random
+from pathlib import Path
+import sys
 
 
-# states = [0] * 33
-# states[16] = 1
-#
-# with ErikaAutomaton('/dev/ttyUSB0', 99, initial_states=states) as tw:
-#     tw.print_automaton(33)
+sys.path.insert(-1, Path(__file__).parent.parent.as_posix())
 
-states = [0] * ErikaAutomaton.MAX_PIXEL_WIDTH
-states[(ErikaAutomaton.MAX_PIXEL_WIDTH // 2) - 1] = 1
 
-with ErikaAutomaton(
-    device='/dev/ttyUSB0',
-    rule=18,
-    initial_states=states,
-    draw_as_image=True
-) as tw:
-    tw.print_automaton(ErikaAutomaton.MAX_PIXEL_WIDTH)
+from erika.cli import ErikaCli  # noqa: E402
+from erika.automaton import ErikaAutomaton  # noqa: E402
+
+
+if __name__ == '__main__':
+    cli_args = ErikaCli().parse_args()
+    rule = 18
+    initial_states = [0] * ErikaAutomaton.MAX_WIDTH
+    initial_states[(ErikaAutomaton.MAX_WIDTH // 2) - 1] = 1
+
+    with ErikaAutomaton(
+        cli_args['device'],
+        rule,
+        language=cli_args['language'],
+        initial_states=initial_states
+    ) as tw:
+        tw.write_string('Elementary cellular automaton with rule {}:\n\n'.format(rule))
+
+        tw.draw_generations(ErikaAutomaton.MAX_WIDTH // 2)
+
+        tw.write_string('\n' * 10)
