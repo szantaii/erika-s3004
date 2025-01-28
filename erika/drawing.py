@@ -1,50 +1,47 @@
 from .erika import Erika
-import random
 import subprocess
 
 
 class ErikaDrawing(Erika):
-    MAX_WIDTH = 128
-    MICRO_STEP_PER_DOT = 3
-    GRAY_PALETTE = (0, 85, 170, 255)
-    GRAY_PALETTE_IMAGE_TEMPLATE = (
-        'P2\n'
-        '{image_width} 1\n'
-        '{max_color_value}\n'
-        '{colors}\n'
-    )
+    MAX_WIDTH = 256
+    MICRO_STEP_PER_PIXEL = 3
 
     @classmethod
-    def _get_image_data_from_file(cls, image_path: str) -> list[list[int]]:
+    def _get_dithered_image_data_from_file(
+        cls,
+        image_path: str,
+        rotate_90_degrees: bool
+    ) -> tuple[int, int, int, list[list[int]]]:
         imagemagick_command = [
             'magick',
             image_path,
-            '-rotate', '90>',
+            '-rotate', '90',
             '-geometry', '{}x>'.format(cls.MAX_WIDTH),
-            '-grayscale', 'Rec709Luma',
-            '-normalize',
-            '-dither', 'FloydSteinberg',
-            '-remap', '-',
-            'pgm:-',
+            '-colorspace', 'Gray',
+            '-ordered-dither', 'o2x2',
+            'pgm:-'
         ]
+
+        if not rotate_90_degrees:
+            del imagemagick_command[2]
+            del imagemagick_command[2]
 
         magick_process = subprocess.Popen(
             imagemagick_command,
-            stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE
         )
 
-        gray_palette_image = cls.GRAY_PALETTE_IMAGE_TEMPLATE.format(
-            image_width=len(cls.GRAY_PALETTE),
-            max_color_value=max(cls.GRAY_PALETTE),
-            colors=' '.join(map(str, cls.GRAY_PALETTE))
-        ).encode()
-
-        pgm_image, stderr = magick_process.communicate(input=gray_palette_image)
+        pgm_image, stderr = magick_process.communicate()
 
         if magick_process.returncode != 0:
-            raise RuntimeError('{!r}'.format(stderr))
+            raise RuntimeError(
+                "Image converter process (magick) "
+                "returned a non-zero exit status ({}): '{}'.".format(
+                    magick_process.returncode,
+                    stderr.decode()
+                )
+            )
 
         # Process PGM image
         #
@@ -82,98 +79,53 @@ class ErikaDrawing(Erika):
             if newline_count == 3:
                 break
 
-        # Get image width and height
-        image_width, image_height = map(
-            int,
-            pgm_image[0: image_header_size].decode().split('\n', maxsplit=2)[1].split(' ', maxsplit=1)
+        # Get image width, height and max gray value (aka white value)
+        image_header_fields = (
+            pgm_image[0: image_header_size].decode()
+                                           .split('\n', maxsplit=3)[:3]
         )
 
-        # Get image data
-        image_data = []
+        image_width, image_height = map(int, image_header_fields[1].split(' ', maxsplit=1))
+        white_value = int(image_header_fields[2])
+
+        # Get pixel data
+        pixel_data = []
 
         for i in range(image_height):
-            image_data.append(
+            pixel_data.append(
                 list(
                     pgm_image[image_header_size + i * image_width: image_header_size + i * image_width + image_width]
                 )
             )
 
-        return image_data
+        return image_width, image_height, white_value, pixel_data
 
-    def _move_to_new_line(self) -> None:
-        self.write_string('\r')
-        self.micro_step_down(micro_step_count=2 * self.__class__.MICRO_STEP_PER_DOT)
+    def draw_image(self, image_path: str, rotate_90_degrees: bool = False) -> None:
+        _, _, white_value, pixel_data = self._get_dithered_image_data_from_file(
+            image_path,
+            rotate_90_degrees
+        )
 
-    def draw_image(self, image_path: str) -> None:
-        image_data = self._get_image_data_from_file(image_path)
-
-        for line in image_data:
+        for line in pixel_data:
             continuous_white_pixels = 0
 
-            if set(line) == {max(self.__class__.GRAY_PALETTE)}:
-                self._move_to_new_line()
-
-                continue
-
             for i, pixel_value in enumerate(line):
-                if set(line[i:]) == {max(self.__class__.GRAY_PALETTE)}:
+                if set(line[i:]) == {white_value}:
                     break
 
-                if pixel_value != max(self.__class__.GRAY_PALETTE):
-                    self.micro_step_right(
-                        micro_step_count=continuous_white_pixels * 2 * self.__class__.MICRO_STEP_PER_DOT
-                    )
-
-                    continuous_white_pixels = 0
-
-                if pixel_value == 0:
-                    self.write_char('.', carriage_advance=False)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_char('.', carriage_advance=False)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_char('.', carriage_advance=False)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_char('.', carriage_advance=False)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                elif pixel_value == 85:
-                    if random.choice([True, False]):
-                        self.write_char('.', carriage_advance=False)
-                        self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                        self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                        self.write_char('.', carriage_advance=False)
-                        self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                        self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-
-                        continue
-
-                    self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.micro_step_up(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_DOT)
-                elif pixel_value == 170:
-                    half_micro_steps = self.__class__.MICRO_STEP_PER_DOT // 2
-                    vertical_padding = random.choice(
-                        [half_micro_steps, self.__class__.MICRO_STEP_PER_DOT - half_micro_steps]
-                    )
-                    horizontal_padding = random.choice(
-                        [half_micro_steps, self.__class__.MICRO_STEP_PER_DOT - half_micro_steps]
-                    )
-                    self.micro_step_down(micro_step_count=vertical_padding)
-                    self.micro_step_right(micro_step_count=horizontal_padding)
-                    self.write_char('.', carriage_advance=False)
-                    self.micro_step_up(
-                        micro_step_count=self.__class__.MICRO_STEP_PER_DOT - vertical_padding
-                    )
-                    self.micro_step_right(
-                        micro_step_count=2 * self.__class__.MICRO_STEP_PER_DOT - horizontal_padding
-                    )
-                else:
+                if pixel_value == white_value:
                     continuous_white_pixels += 1
 
-            self._move_to_new_line()
+                    continue
+
+                self.micro_step_right(
+                    micro_step_count=continuous_white_pixels * self.__class__.MICRO_STEP_PER_PIXEL
+                )
+
+                continuous_white_pixels = 0
+
+                self.write_char('.', carriage_advance=False)
+                self.micro_step_right(micro_step_count=self.__class__.MICRO_STEP_PER_PIXEL)
+
+            self.write_string('\r')
+            self.micro_step_down(micro_step_count=self.__class__.MICRO_STEP_PER_PIXEL)
