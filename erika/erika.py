@@ -97,7 +97,16 @@ class Erika:
     def write_char(self, char: str, carriage_advance: bool = True) -> None:
         if (not isinstance(char, str)
                 or len(char) != 1):
-            raise RuntimeError
+            raise ValueError(
+                (
+                    "First argument of {} must be a single character with 'str' type, "
+                    "but '{}' of type '{}' was provided instead."
+                ).format(
+                    self.__class__.write_char.__qualname__,
+                    char,
+                    type(char).__name__
+                )
+            )
 
         if not carriage_advance:
             self.write_bytes(
