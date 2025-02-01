@@ -121,6 +121,8 @@
         "a": "YQ==",
         "b": "Yg==",
         "c": "Yw==",
-        "\uDBFF\uDFFF": "8QM="
+        "\uDBFF\uDFFF": "8QM=",
+        ".": "cA==",
+        "\u000D": "eA=="
     }
 }

@@ -1,6 +1,7 @@
 import codec_test
 import control_test
 import erika_test
+import automaton_test
 from types import ModuleType
 import unittest
 
@@ -32,6 +33,7 @@ if __name__ == '__main__':
         codec_test,
         control_test,
         erika_test,
+        automaton_test,
     ]
 
     test_runner = TestRunner()
