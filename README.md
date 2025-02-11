@@ -6,20 +6,42 @@
 * [License](#license)
 * [Hardware setup](#hardware-setup)
   * [Erika connector](#erika-connector)
+  * [USB to TTL adapter](#usb-to-ttl-adapter)
+  * [Connecting the typewriter to USB to TTL adapter](#connecting-the-typewriter-to-usb-to-ttl-adapter)
 * [Software](#software)
+  * [Prerequisites](#prerequisites)
+  * [TODOTitle](#todotitle)
+  * [Character encoding](#character-encoding)
+  * [Typewriter control](#typewriter-control)
+* [Tests](#tests)
+* [Examples](#examples)
+  * [Simple example](#simple-example)
+  * [Reading from the typewriter](#reading-from-the-typewriter)
+  * [Paper and typewriter carriage movement](#paper-and-typewriter-carriage-movement)
+  * [Elementary cellular automaton](#elementary-cellular-automaton)
+  * [Drawing images](#drawing-images)
 * [Resources](#resources)
 
 ## About
 
-__TODO__
+TODO
+
+The project is structured in the following directories:
+
+| Directory              | Description |
+|------------------------|-------------|
+| [`doc`](doc)           | TODO        |
+| [`erika`](erika)       | TODO        |
+| [`examples`](examples) | TODO        |
+| [`test`](test)         | TODO        |
 
 ## License
 
-__TODO__
+This project is licensed under the MIT license. For the full license, please see [`LICENSE`](LICENSE).
 
 ## Hardware setup
 
-__TODO__
+TODO
 
 ### Erika connector
 
@@ -48,7 +70,7 @@ B1 |  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O 
 ```
 
 | Connector | Function |
-| --------- | -------- |
+|-----------|----------|
 | `A11`     | `RX`     |
 | `A12`     | `RTS`    |
 | `A13`     | `GND`    |
@@ -58,12 +80,12 @@ B1 |  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O  O 
 
 ### USB to TTL adapter
 
-Is this necessary?
+TODO
 
 ### Connecting the typewriter to USB to TTL adapter
 
 | USB to TTL adapter pin | Erika connector pin (function) |
-| ---------------------- | ------------------------------ |
+|------------------------|--------------------------------|
 | `TX`                   | `A11` (`RX`)                   |
 | `CTS`                  | `A12` (`RTS`)                  |
 | `GND`                  | `A13` (`GND`)                  |
@@ -73,12 +95,29 @@ Is this necessary?
 
 ## Software
 
-__TODO__
+### Prerequisites
 
-## Character encoding and typewriter control
+TODO
+
+drawing preview:
+
+```sh
+magick                       \
+    /path/to/input/image.png \
+    -geometry '256x>'        \
+    -colorspace Gray         \
+    -ordered-dither o2x2     \
+    'pgm:preview.pgm'
+```
+
+### TODOTitle
+
+### Character encoding
+
+TODO: `hu-HU` language, etc.
 
 | Character | Erika encoded character [byte] | Description                                       |
-| --------- | ------------------------------ | ------------------------------------------------- |
+|-----------|--------------------------------|---------------------------------------------------|
 | `\u0008`  | `0x72`                         | Backspace (U+0008)                                |
 | `\u0009`  | `0x79`                         | Character tabulation (U+0009)                     |
 | `\u000A`  | `0x77`                         | Line feed (lf) (U+000A)                           |
@@ -183,55 +222,141 @@ __TODO__
 | `\u00FC`  | `0x12`                         | Latin small letter u with diaeresis (U+00FC)      |
 | `\u0171`  | `0x14`                         | Latin small letter u with double acute (U+0171)   |
 
-> 96H Drucker Fertigmeldung
->
-> A0H Dauerfunktion für alle Tasten\
-> A1H Übertragungsrate 10-1200 bd\
-> 08-2400 bd\
-> 04-4800 bd\
-> 02-9600 bd\
-> 01-19200 bd
->
-> A3H Anschlagstärke (nächstes Zeichen ist Stärke)\
-> A4H\
-> A5H Tabulator (nächstes Zeichen is Schritt)\
-> A6H Zeilenschaltung (nächstes Zeichen ist Schritt)\
-> A7H Typenrad drehen (nächstes Zeichen ist Schritt)\
-> A8H Farbbandtransport (nächstes Zeichen ist Schritt)\
-> A9H kein Zeilenvorschub (Doppeldruck)\
-> AAH BEL Bell (Signal nächstes Zeichen ist Signallänge)(07H;\
-> ABH Tastaturabfrage\
-> ACH Tastaturabfrage 2 (mit 00 Byte von Tastatur)\
-> ADH entspr. der grünen REL-Funktion\
-> AEH letztes Zeichen löschen\
-> AFH Relocated
+### Typewriter control
 
-## Image drawing
+TODO
 
-6 &ldquo;color&rdquo; grayscale image conversion:
 
+| code   | Function | Note |
+|--------|------------------------------------------------|----------------------------------------|
+| `0x71` | Space                                          | One character to the right (space bar) |
+| `0x72` | Backspace                                      | One character to the left (backspace)  |
+| `0x73` | half step right (half-space)                   | 1/2 character to the right             |
+| `0x74` | half step left (half-backspace)                | 1/2 character to the left              |
+| `0x75` | half step down                                 | 1/2 line down                          |
+| `0x76` | half step up                                   | 1/2 line up                            |
+| `0x77` | New line (carriage return + line feed)         | back to the beginning of the line and set line spacing down |
+| `0x78` | Carriage return (CR, `\r`)                     | back to the beginning of the line      |
+| `0x79` | Horizontal tab (`\t`)                          | right to the next tab                  |
+| `0x7A` | Set tabulator                                  | T+ (set tab)                           |
+| `0x7B` | Delete tab                                     | T- (Delete Tab)                        |
+| `0x7C` | Delete all tabs                                | T- (delete all tabs)                   |
+| `0x7D` | Set default tab stop                           | T+ (activate tab grid)                 |
+| `0x7E` | Set margin left                                | Set margin left                        |
+| `0x7F` | Set margin right                               | Set margin right                       |
+| `0x80` | edge remover                                   | loosen the edge                        |
+| `0x81` | 1/20 line break down                           | 1/20 line down (microstep)             |
+| `0x82` | 1/20 line feed, high                           | 1/20 line above                        |
+| `0x83` | paper feed                                     | paper feed                             |
+| `0x84` | 1-line                                         | line spacing 1                         |
+| `0x85` | 1.5 lines                                      | line spacing 1.5                       |
+| `0x86` | 2-line                                         | line spacing 2"                        |
+| `0x87` | 10 characters/inch                             |                                        |
+| `0x88` | 12 characters/inch                             |                                        |
+| `0x89` | 15 characters/inch                             |                                        |
+| `0x8B` | Delete character OFF                           | Status: Printing (the following characters will be printed) |
+| `0x8C` | Delete character ON                            | Status: Correct (the following characters are deleted with correction tape) |
+| `0x8D` | reverse pressure OFF[^1]                       | Backward printing off; Forward printing (character printing, then feed) |
+| `0x8E` | reverse pressure ON[^1]                        | Backward printing on; Backward printing (first feed backwards, then character printing) |
+| `0x8F` | Edge release ON (external)[^1]                 | Open margin right; Extreme margin solver. The margin setting is no longer taken into account until SETRD arrives. |
+| `0x90` | Set margin (external)[^1]                      | Close margin again; External margin setter (see LORED). This symbol is not approved for use! |
+| `0x91` | Keyboard OFF (duplex)[^1]                      | Separation mode (separation of keyboard and printer); Duplex operation: All key information is only output to TxD and only that coming from RxD is printed (Corr, CREL and CRL are not effective!) |
+| `0x92` | Keyboard ON (simplex)[^1]                      | Cancelling the separation mode; Simplex mode: All key information is printed |
+| `0x95` | Reset, Synchron                                | Reinitialization of type wheel, repeat and line; reset, synchronization, printer basic settings |
+| `0x96` | printer completion message                     | Printer completion message: RTS will only be activated again when the character is printed |
+| `0x97` | second character set OFF                       | All keyboard codes are output according to the table. Unassigned keys of the code level are output with their matrix code 11xxxyyyB |
+| `0x98` | second character set ON                        | Output of the keyboard codes with their matrix code. The keys are arranged in an 8 x 8 matrix. Bit format: zzmyyyB; zz = 01 = Normal, 10 = Shift, 11 = Code; mut = 000…111 = Column; yyy = 000…111 = Row |
+| `0x99` |                                                | |
+| `0x9A` |                                                | |
+| `0x9B` | permanent function ON[^1]                      | Autorepeat on |
+| `0x9C` | permanent function OFF[^1]                     | Autorepeat off |
+| `0x9D` | 9CH and 9EH in normal circuit                  | Switch CSPE and CPILA functions to normal |
+| `0x9E` | pilgrim step OFF                               | lock pilgrim step |
+| `0x9F` | LF Line Feed (0AH; ^J)[^1]                     | one line down; line feed (1; 1.5; 2 = 40; 60; 80 motor steps) |
+| `0xA0` | permanent function for all keys[^1]            | Instant repeat on |
+| `0xA1` | Transfer rate 10-1200 bd, 08-2400 bd, 04-4800 bd, 02-9600 bd, 01-19200 | Change baud rate, the code for the new baud rate follows (10 = 1200, 08 = 2400, 04 = 4800, 02 = 9600, 01 = 19200). Not released! |
+| `0xA3` | velocity (next character is strength)          | |
+| `0xA4` |                                                | |
+| `0xA5` | Tabulator (next character is step)             | Direct carriage control: The following byte specifies the number of steps. 0…127 steps forward; 256-(1..127) steps backward. Step size 1/120" |
+| `0xA6` | carriage return (next character is step)       | Direct paper feed control: The following byte instructs the piercing roller to perform the corresponding number of steps (see A5); step size 1/240". Steps 3, 4, 5, 6 are forbidden! |
+| `0xA7` | Turn the type wheel (next character is step)   | Direct type wheel control: The following byte instructs the type wheel to rotate the corresponding number of steps (see A5); step size 3.6° |
+| `0xA8` | Ribbon transport (next character is step)      | Direct ribbon control: The following byte instructs the ribbon to advance 10° per step. |
+| `0xA9` | no line feed (double print)                    | The character following this code is printed without advance (print on the spot) |
+| `0xAA` | BEL Bell (Signal next character is signal length)(07H) | This code is followed by a byte with the length code for the signal generator (about 20 ms per unit) |
+| `0xAB` | keyboard query                                 | |
+| `0xAC` | Keyboard query 2 (with 00 bytes from keyboard) | |
+| `0xAD` | corresponding to the green REL function[^2]    | Delete Relocate |
+| `0xAE` | delete last character[^2]                      | correction function |
+| `0xAF` | Relocated[^2]                                  | Relocate |
+
+[^1]: These codes are only received, not sent.
+[^2]: These characters are only sent, not received.
+
+## Tests
+
+TODO
+
+## Examples
+
+TODO
+
+### Simple example
+
+TODO
+
+```sh
+python3 examples/example_simple.py --device /dev/ttyUSB0
 ```
-magick                                                              \
-    img0023.tiff                                                    \
-    -rotate '90>'                                                   \
-    -geometry 128x                                                  \
-    -grayscale Rec709Luma                                           \
-    -dither FloydSteinberg                                          \
-    -remap <(printf '%s\n' 'P2' '6 1' '255' '0 51 102 153 204 255') \
-    pgm:-
+
+![](doc/example_simple.png)
+
+### Reading from the typewriter
+
+TODO
+
+```sh
+python3 examples/example_read.py --device /dev/ttyUSB0
 ```
 
-Monochrome image conversion:
+### Paper and typewriter carriage movement
 
+TODO
+
+```sh
+python3 examples/example_movement.py --device /dev/ttyUSB0
 ```
-magick                    \
-    img0023.tiff          \
-    -rotate '90>'         \
-    -geometry 256x        \
-    -remap pattern:gray50 \
-    pgm:-
+
+![](doc/example_movement.png)
+
+### Elementary cellular automaton
+
+TODO
+
+```sh
+python3 examples/example_automaton.py --device /dev/ttyUSB0
 ```
+
+![](doc/example_automaton.png)
+
+### Drawing images
+
+TODO
+
+[ImageMagick's built-in logo image](https://www.imagemagick.org/script/formats.php#builtin-images)
+
+```sh
+python3 examples/example_drawing.py --device /dev/ttyUSB0
+```
+
+![](doc/example_drawing.png)
 
 ## Resources
 
-__TODO__
+* [Chaostreff-Potsdam/erika3004](https://github.com/Chaostreff-Potsdam/erika3004)
+* [Chaostreff-Potsdam/erika-docs](https://github.com/Chaostreff-Potsdam/erika-docs)
+* [jbb/erika_S3004](https://codeberg.org/jbb/erika_S3004)
+* [Erika S 3004 [Homecomputer DDR]](https://hc-ddr.hucki.net/wiki/doku.php/z9001/erweiterungen/s3004) ([archive.org](https://web.archive.org/web/20250215162723/https://hc-ddr.hucki.net/wiki/doku.php/z9001/erweiterungen/s3004))
+* [practic 3/89, S. 135-137 [Homecomputer DDR]](https://hc-ddr.hucki.net/wiki/doku.php/z1013/literatur/practic-89-3-1) ([archive.org](https://web.archive.org/web/20250215162540/https://hc-ddr.hucki.net/wiki/doku.php/z1013/literatur/practic-89-3-1))
+* [Informationen zur Modellreihe Erika electronic 30xx](https://erika-electronic.de/) ([archive.org](https://web.archive.org/web/20250211180518/https://erika-electronic.de/))
+
+TODO
